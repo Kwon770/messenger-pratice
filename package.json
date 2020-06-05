@@ -1,0 +1,8 @@
+{
+  "name": "messenger-pratice",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "https://github.com/Kwon770/messenger-pratice",
+  "author": "Kwon770 <sckwon770@gmail.com>",
+  "license": "MIT"
+}
