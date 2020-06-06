@@ -1,5 +1,6 @@
 import { GraphQLServer } from "graphql-yoga";
 import { prisma } from "./generated/prisma-client";
+// import logger from "morgan";
 
 const typeDefs = `
     type Message {
@@ -26,13 +27,16 @@ const resolvers = {
   },
   Subscription: {
     newMessage: {
-      subscribe: () => prisma.$subscribe.message().node,
-      resolver: (payload) => payload,
+      subscribe: () => prisma.$subscribe.message().node(),
+      resolve: (payload) => payload,
     },
   },
 };
 
 const server = new GraphQLServer({ typeDefs, resolvers });
+var morgan = require("morgan");
+server.express.use(morgan("dev"));
+
 server.start(() =>
   console.log("Server is running on http://localhost:4000 ✅")
 );

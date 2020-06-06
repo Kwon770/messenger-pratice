@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -7,7 +7,7 @@ import {
   KeyboardAvoidingView,
 } from "react-native";
 import gql from "graphql-tag";
-import { useQuery, useMutation } from "react-apollo-hooks";
+import { useQuery, useMutation, useSubscription } from "react-apollo-hooks";
 import withSuspense from "./withSuspense";
 
 const GET_MESSAGES = gql`
@@ -28,15 +28,36 @@ const SEND_MESSAGE = gql`
   }
 `;
 
+const NEW_MESSAGE = gql`
+  subscription newMessage {
+    newMessage {
+      id
+      text
+    }
+  }
+`;
+
 function Chat() {
   const [message, setMessage] = useState("");
   const [sendMessageMutation] = useMutation(SEND_MESSAGE, {
     variables: {
       text: message,
     },
-    refetchQueries: () => [{ query: GET_MESSAGES }],
   });
-  const { data, error } = useQuery(GET_MESSAGES, { suspend: true });
+  const { data: loadedMessages, error } = useQuery(GET_MESSAGES, {
+    suspend: true,
+  });
+  const { data } = useSubscription(NEW_MESSAGE);
+  const [messages, setMessages] = useState(loadedMessages.messages || []);
+  const handleNewMessage = () => {
+    if (data !== undefined) {
+      const { newMessage } = data;
+      setMessages((previous: Array<any>) => [...previous, newMessage]);
+    }
+  };
+  useEffect(() => {
+    handleNewMessage();
+  }, [data]);
   const onChangeText = (text: string) => setMessage(text);
   const onSubmit = async () => {
     if (message === "") {
@@ -50,6 +71,7 @@ function Chat() {
       console.log(e);
     }
   };
+
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} enabled behavior="padding">
       <ScrollView
@@ -60,7 +82,7 @@ function Chat() {
           alignItems: "center",
         }}
       >
-        {data.messages.map((message: any) => (
+        {messages.map((message: any) => (
           <View key={message.id} style={{ marginBottom: 10 }}>
             <Text>{message.text}</Text>
           </View>
