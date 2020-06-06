@@ -1,5 +1,6 @@
 import { GraphQLServer } from "graphql-yoga";
 import { prisma } from "./generated/prisma-client";
+import axios from "axios";
 // import logger from "morgan";
 
 const typeDefs = `
@@ -23,7 +24,18 @@ const resolvers = {
     messages: () => prisma.messages(),
   },
   Mutation: {
-    sendMessage: (_, { text }) => prisma.createMessage({ text }),
+    sendMessage: async (_, { text }) => {
+      const { data } = await axios.post(
+        "https://exp.host/--/api/v2/push/send",
+        {
+          to: "ExponentPushToken[ItOy_qKmVVhwAXBCQslCTk]",
+          title: "New Message !",
+          body: text,
+        }
+      );
+      console.log(data);
+      return prisma.createMessage({ text });
+    },
   },
   Subscription: {
     newMessage: {
