@@ -37,6 +37,19 @@ const NEW_MESSAGE = gql`
   }
 `;
 
+interface Messages {
+  id: number;
+  text: String;
+}
+
+interface MessagesData {
+  messages: Messages[];
+}
+
+interface MessagesVars {
+  text: String;
+}
+
 function Chat() {
   const [message, setMessage] = useState("");
   const [sendMessageMutation] = useMutation(SEND_MESSAGE, {
@@ -44,11 +57,13 @@ function Chat() {
       text: message,
     },
   });
-  const { data: loadedMessages, error } = useQuery(GET_MESSAGES, {
+  const { data: { messages: messagesHistory } = {}, error } = useQuery<
+    MessagesData
+  >(GET_MESSAGES, {
     suspend: true,
   });
   const { data } = useSubscription(NEW_MESSAGE);
-  const [messages, setMessages] = useState(loadedMessages.messages || []);
+  const [messages, setMessages] = useState(messagesHistory || []);
   const handleNewMessage = () => {
     if (data !== undefined) {
       const { newMessage } = data;
